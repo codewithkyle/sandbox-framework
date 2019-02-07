@@ -1,0 +1,21 @@
+
+{
+    "compilerOptions": {
+        "outDir": "./docs",
+        "rootDir": "./app/typescript",
+        "sourceMap": true,
+        "noImplicitAny": true,
+        "removeComments": true,
+        "target": "es5",
+        "module": "commonjs",
+        "lib": [
+            "dom",
+            "ScriptHost",
+            "ES2015",
+            "ES2016",
+            "ES2017",
+            "ES2018",
+            "ESNext",
+        ]
+    }
+}
