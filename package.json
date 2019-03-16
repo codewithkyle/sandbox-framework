@@ -1,5 +1,5 @@
 {
-  "name": "codwithkyle-sandbox-framework",
+  "name": "@codwithkyle/sandbox-framework",
   "version": "0.0.3",
   "description": "A simple framework for building unique elements in a sandbox environment.",
   "author": "Kyle Andrews",
