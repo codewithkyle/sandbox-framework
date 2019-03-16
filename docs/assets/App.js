@@ -81,16 +81,33 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./_compiled/App.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = 0);
 /******/ })
 /************************************************************************/
-/******/ ({
+/******/ ([
+/* 0 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-/***/ "./_compiled/App.js":
-/***/ (function(module, exports) {
-
-eval("//# sourceMappingURL=App.js.map\n\n//# sourceURL=webpack:///./_compiled/App.js?");
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return App; });
+class App {
+    constructor() {
+        this.init();
+    }
+    /**
+     * Called when the class has be initiated
+     */
+    init() {
+    }
+}
+/**
+ * IIFE for launching the application
+ */
+(() => {
+    new App();
+})();
+//# sourceMappingURL=App.js.map
 
 /***/ })
-
-/******/ });
+/******/ ]);

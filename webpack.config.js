@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-    mode: "development",
+    mode: "none",
     optimization: {
         removeAvailableModules: false,
         removeEmptyChunks: false
@@ -12,7 +12,7 @@ module.exports = {
     entry: './_compiled/App.js',
     output: {
         path: path.resolve(__dirname, "docs/assets"),
-        filename: 'App.js',
+        filename: 'app.js',
         pathinfo: false
     }
   };
