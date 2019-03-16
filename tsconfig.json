@@ -7,8 +7,8 @@
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "removeComments": false,
-        "target": "es6",
-        "module": "esnext",
+        "target": "es5",
+        "module": "commonjs",
         "moduleResolution": "node",
         "lib": [
             "dom",

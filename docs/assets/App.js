@@ -86,25 +86,27 @@
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return App; });
-class App {
-    constructor() {
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var App = /** @class */ (function () {
+    function App() {
         this.init();
     }
     /**
      * Called when the class has be initiated
      */
-    init() {
-    }
-}
+    App.prototype.init = function () {
+    };
+    return App;
+}());
+exports.default = App;
 /**
  * IIFE for launching the application
  */
-(() => {
+(function () {
     new App();
 })();
 //# sourceMappingURL=App.js.map
