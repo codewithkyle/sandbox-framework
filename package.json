@@ -1,6 +1,6 @@
 {
   "name": "@codwithkyle/sandbox-framework",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A simple framework for building unique elements in a sandbox environment.",
   "author": "Kyle Andrews",
   "contributors": [
@@ -12,11 +12,11 @@
     "dev": "run-p watch:*",
     "dev:typescript": "tsc && npm run dev:webpack",
     "dev:webpack": "webpack",
-    "dev:sass": "node-sass ./app/sass/dev.scss ./docs/assets/main.css",
+    "dev:sass": "node-sass ./app/sass/main.scss ./docs/assets/main.css",
     "compile": "npm-run-all compile:*",
     "compile:typescript": "tsc",
     "compile:webpack": "webpack",
-    "compile:scss": "node-sass ./app/sass/production.scss ./docs/assets/main.css --output-style compressed",
+    "compile:scss": "node-sass ./app/sass/main.scss ./docs/assets/main.css --output-style compressed",
     "preview": "http-server ./docs",
     "test": "npm-run-all compile:* && npm run preview",
     "lint": "npm-run-all lint:*",
@@ -58,6 +58,7 @@
   },
   "dependencies": {
     "animejs": "^3.0.1",
-    "webpack": "^4.29.6"
+    "webpack": "^4.29.6",
+    "@codewithkyle/state-manager": "^1.0.0"
   }
 }

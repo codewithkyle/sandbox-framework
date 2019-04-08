@@ -12,7 +12,7 @@ module.exports = {
     entry: './_compiled/App.js',
     output: {
         path: path.resolve(__dirname, "docs/assets"),
-        filename: 'app.js',
+        filename: 'App.js',
         pathinfo: false
     }
   };

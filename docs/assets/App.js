@@ -91,22 +91,22 @@
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var App = /** @class */ (function () {
-    function App() {
+class App {
+    constructor() {
         this.init();
     }
     /**
-     * Called when the class has be initiated
+     * Called when the class has be created.
      */
-    App.prototype.init = function () {
-    };
-    return App;
-}());
-exports.default = App;
+    init() {
+        console.log('App started');
+    }
+}
+exports.App = App;
 /**
- * IIFE for launching the application
+ * IIFE for launching the Checkout prototype.
  */
-(function () {
+(() => {
     new App();
 })();
 //# sourceMappingURL=App.js.map
