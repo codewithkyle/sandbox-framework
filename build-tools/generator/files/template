@@ -178,19 +178,20 @@
             modules = {};
         </script>
 
-        <link rel="stylesheet" href="assets/styles/homepage.css">
+        <link rel="stylesheet" href="assets/styles/REPLACE_WITH_KEBAB.css">
     </head>
     <body>
         <script src="assets/scripts/runtime.js"></script>
         <script src="assets/scripts/globals.js" async="async"></script>
         <script src="assets/scripts/npm.uuid.js" async="async"></script>
         <script src="assets/scripts/npm.pageworks.js" async="async"></script>
+        SCRIPT_PLACEHOLDER
             <div class="c-transition">
                 <div class="c-transition_primary"></div>
                 <div class="c-transition_secondary"></div>
             </div>
             <main role="main" class="js-pjax">
-                <article id="homepage" class="g-container -full u-mobile-padding">
+                <article class="REPLACE_WITH_SCSS_CLASS g-container -full u-mobile-padding" data-template="REPLACE_WITH_KEBAB" MODULE_PLACEHOLDER>
                 </article>
             </main>
             <script src="assets/scripts/application.js"></script>

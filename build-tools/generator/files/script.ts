@@ -2,6 +2,11 @@ import { Module } from 'Module';
 import { Application } from 'Application';
 import { Env } from 'Env';
 
+/**
+ * @class REPLACE_ME
+ * @description A module for the REPLACE_NAME REPLACE_TYPE
+ * @author AUTHOR_NAME
+ */
 export class REPLACE_ME extends Module{
     public static index:string = 'REPLACE_ME';
 
