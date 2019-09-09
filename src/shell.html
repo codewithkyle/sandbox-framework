@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en" class="is-loading" data-cachebust="1567594568180">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    
+    <title>Sandbox Framework</title>
+    <meta name="description" content="A sandbox framework for building demos, prototypes, or web applications for use with GitHub Pages.">
+
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,900&display=swap" rel="stylesheet">
+
+    <script defer>
+        var stylesheets = ['colors', 'reset', 'settings'];
+    </script>
+    <script defer>
+        var modules = [];
+    </script>
+    <script defer>
+        var components = [];
+    </script>
+
+    <style>
+        html.is-loading loading-screen
+        {
+            display: flex;
+        }
+
+        loading-screen
+        {
+            background-color: #f6f8f9;
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9999;
+            top: 0;
+            left: 0;
+            display: none;
+            flex-flow: column wrap;
+            user-select: none;
+            justify-content: center;
+            align-items: center;
+            cursor: wait;
+        }
+
+        loading-screen div
+        {
+            display: inline-block;
+            margin: 0;
+            opacity: 0.87;
+        }
+
+        loading-screen circle-loader
+        {
+            display: block;
+            height: 64px;
+            width: 64px;
+            box-sizing: border-box;
+            margin: 0 auto 1rem;
+            border: 4px hsl(204, 13%, 88%) solid;
+            border-top: 4px #161b25 solid;
+            border-radius: 50%;
+            animation: loadingSpinner 1s infinite linear;
+        }
+
+        loading-screen span
+        {
+            font-size: 14px;
+            color: #879099;
+            display: block;
+            width: 100%;
+            text-align: center;
+            font-family: 'Roboto', Arial, Helvetica, sans-serif;
+        }
+
+        loading-screen loading-logo
+        {
+            font-family: 'Roboto', Arial, Helvetica, sans-serif;
+            position: absolute;
+            left: 50%;
+            bottom: 64px;
+            transform: translateX(-47%);
+            font-size: 24px;
+            color: rgba(135, 144, 153,0.3);
+            font-weight: 300;
+            text-align: center;
+        }
+
+        loading-screen loading-logo strong
+        {
+            font-weight: 900;
+            color: rgba(135, 144, 153,0.6);
+        }
+
+        @keyframes loadingSpinner
+        {
+            from
+            {
+                transform: rotate(0deg);
+            }
+            to
+            {
+                transform: rotate(359deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <loading-screen>
+        <div>
+            <circle-loader></circle-loader>
+            <span>Loading application...</span>
+        </div>
+        <loading-logo>
+            Sandbox Frameworks by <a href="https://kyleandrews.dev/">Kyle Andrews</a>
+        </loading-logo>
+    </loading-screen>
+    <main role="main">
+        REPLACE_WITH_HTML    
+    </main>
+    <script type="module" src="assets/application.js"></script>
+    <script type="module">
+        if ('serviceWorker' in navigator && !window.location.origin.match(/\.local/gi) && !window.location.hostname.match('localhost') && !window.location.hostname.match('127.0.0.1'))
+        {
+            navigator.serviceWorker.register("worker.js", { scope: '/' })
+            .then((reg) => {
+                if (navigator.serviceWorker.controller)
+                {
+                    navigator.serviceWorker.controller.postMessage({'application': document.documentElement.dataset.cachebust})
+                }
+            }).catch((error) => {
+                console.error('Registration failed with ' + error);
+            });
+        }
+    </script>
+</body>
+</html>
