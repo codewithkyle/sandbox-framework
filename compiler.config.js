@@ -19,6 +19,7 @@ class Compiler
         try
         {
             await this.removeAssetsDirectory();
+            await this.createBuildDirectory();
             await this.createAssetsDirectory();
             await this.moveApplication();
             await this.moveWorker();
@@ -28,11 +29,11 @@ class Compiler
             const homepageHtmlFile = await this.getHomepageHtmlFile();
             await this.updateHomepageHtml(homepageHtmlFile, timestamp);
             await this.updateHtmlFiles(htmlFiles, timestamp)
-            
+
             /** SASS */
             const sassFiles = await this.getSassFiles();
             await this.compileSass(sassFiles, timestamp);
-            
+
             /** Web Components */
             const componentFiles = await this.getComponentFiles();
             await this.moveComponents(componentFiles, timestamp);
@@ -43,7 +44,7 @@ class Compiler
             const dependencies = await this.getWebDependencies();
             const serverSafeBundleNames = await this.writeBundles(dependencies);
             await this.buildPackages(serverSafeBundleNames, timestamp);
-
+            
             await this.moveCNAME();
         }
         catch (error)
@@ -76,6 +77,12 @@ class Compiler
     {
         const built = [];
         return new Promise((resolve, reject)=>{
+
+            if (serverSafeBundleNames.length === 0)
+            {
+                resolve();
+            }
+
             for (let i = 0; i < serverSafeBundleNames.length; i++)
             {
                 const inputOptions = {
@@ -135,6 +142,11 @@ class Compiler
         return new Promise((resolve, reject)=>{
             
             const writtenBundles = [];
+
+            if (dependencies.length === 0)
+            {
+                resolve(writtenBundles);
+            }
             
             for (let i = 0; i < dependencies.length; i++)
             {
@@ -237,6 +249,11 @@ class Compiler
     {
         return new Promise((resolve, reject)=>{
             let moved = 0;
+
+            if (files.length === 0)
+            {
+                resolve();
+            }
 
             for (let i = 0; i < files.length; i++)
             {
@@ -512,15 +529,39 @@ class Compiler
         });
     }
 
+    createBuildDirectory()
+    {
+        return new Promise((resolve, reject)=>{
+            fs.promises.access('build')
+            .then(() => { resolve(); })
+            .catch(() => {
+                fs.mkdir('build', (error)=>{
+                    if (error)
+                    {
+                        reject(error);
+                    }
+    
+                    resolve();
+                });
+            });
+        });
+    }
+
     removeAssetsDirectory()
     {
         return new Promise((resolve, reject)=>{
-            fs.rmdir('build/assets', { recursive: true }, (error)=>{
-                if (error)
-                {
-                    reject(error);
-                }
-
+            fs.promises.access('build/assets')
+            .then(() => {
+                fs.rmdir('build/assets', { recursive: true }, (error)=>{
+                    if (error)
+                    {
+                        reject(error);
+                    }
+    
+                    resolve();
+                });
+            })
+            .catch(() => {
                 resolve();
             });
         });

@@ -35,6 +35,14 @@ npm run preview
 npm run deploy
 ```
 
+### Deploying to GitHub Pages
+
+This project is set up to deploy to the gh-pages won push to the master branch. When deploying to gh-pages the project will need a secret named `ACCESS_TOKEN`. To generate a access token add a new [personal access token](https://github.com/settings/tokens) to your GitHub account with the "full control of private repositories" scope selected.
+
+### Custom Domain
+
+To set a custom domain for the project add a `CNAME` file to the projects root directory, the file will be bundled into the gh-pages deployment.
+
 ### Registering Files
 
 Files are registered via script elements on the pages `.html` file. Use the following scripts to register your files.
