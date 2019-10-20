@@ -15,7 +15,7 @@
         /** Loads before loading animation ends */
         var criticalCss = ['colors', 'reset', 'settings'];
         var packages = [];
-        var modules = [];
+        var modules = ['pjax'];
         var criticalComponents = ['import-component'];
 
         /** Loads whenever */
@@ -119,7 +119,9 @@
         </loading-logo>
     </loading-screen>
     <main role="main">
+        <page-view>
         REPLACE_WITH_HTML
+        </page-view>
     </main>
     <script type="module" src="/assets/application.js"></script>
     <script type="module">
