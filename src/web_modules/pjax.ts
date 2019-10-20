@@ -110,6 +110,7 @@ class Pjax
         e.preventDefault();
         const el = e.currentTarget as HTMLAnchorElement;
         const href = el.href;
+        document.documentElement.classList.add('is-loading');
 
         try
         {
@@ -121,14 +122,14 @@ class Pjax
             const oldViews = await this.getViews(document);
             await this.updateContent(oldViews, newViews);
             window.history.pushState({}, document.title, href);
+            this.init();
             const reloadEvent = new CustomEvent('app:reload');
             document.dispatchEvent(reloadEvent);
-            this.init();
+            console.log(`Pjax navigated to ${ href }`);
         }
         catch (error)
         {
             console.error(error);
-            console.log('Failed to swap content');
             window.location.href = href;
         }
     }
