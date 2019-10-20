@@ -8,15 +8,18 @@
     <title>Sandbox Framework</title>
     <meta name="description" content="A sandbox framework for building demos, prototypes, or web applications for use with GitHub Pages.">
 
+    <link rel=preconnect href="https://fonts.googleapis.com/">
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,900&display=swap" rel="stylesheet">
 
     <script defer>
-        var stylesheets = ['colors', 'reset', 'settings'];
-    </script>
-    <script defer>
+        /** Loads before loading animation ends */
+        var criticalCss = ['colors', 'reset', 'settings'];
+        var packages = [];
         var modules = [];
-    </script>
-    <script defer>
+        var criticalComponents = [];
+
+        /** Loads whenever */
+        var stylesheets = [];
         var components = [];
     </script>
 
@@ -116,7 +119,7 @@
         </loading-logo>
     </loading-screen>
     <main role="main">
-        REPLACE_WITH_HTML    
+        REPLACE_WITH_HTML
     </main>
     <script type="module" src="assets/application.js"></script>
     <script type="module">

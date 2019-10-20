@@ -18,7 +18,7 @@ class Compiler
     {
         try
         {
-            await this.removeAssetsDirectory();
+            await this.removeBuildDirectory();
             await this.createBuildDirectory();
             await this.createAssetsDirectory();
             await this.moveApplication();
@@ -28,7 +28,8 @@ class Compiler
             const htmlFiles = await this.getHtmlFiles();
             const homepageHtmlFile = await this.getHomepageHtmlFile();
             await this.updateHomepageHtml(homepageHtmlFile, timestamp);
-            await this.updateHtmlFiles(htmlFiles, timestamp)
+            await this.injectIndexHtmlFiles(htmlFiles.index, timestamp)
+            await this.buildHtmlFiles(htmlFiles.other);
 
             /** SASS */
             const sassFiles = await this.getSassFiles();
@@ -353,7 +354,40 @@ class Compiler
         });
     }
 
-    updateHtmlFiles(htmlFiles, timestamp)
+    buildHtmlFiles(htmlFiles)
+    {
+        return new Promise((resolve, reject) => {
+            if (htmlFiles.length === 0)
+            {
+                resolve();
+            }
+
+            let moved = 0;
+            for (let i = 0; i < htmlFiles.length; i++)
+            {
+                const htmlPath = htmlFiles[i].replace('src/', 'build/').match(/.*\//g)[0].replace(/[\/]$/g, '').trim();
+                const fileName = htmlFiles[i].replace(/.*\//gi, '').trim();
+                fs.promises.mkdir(htmlPath, { recursive: true })
+                .then(()=>{
+                    fs.copyFile(htmlFiles[i], `${ htmlPath }/${ fileName }`, (error)=>{
+                        if (error)
+                        {
+                            reject(error);
+                        }
+
+                        moved++;
+                        if (moved === htmlFiles.length)
+                        {
+                            resolve();
+                        }
+                    });
+                })
+                .catch(error => reject(error));
+            }
+        });
+    }
+
+    injectIndexHtmlFiles(htmlFiles, timestamp)
     {
         return new Promise((resolve, reject)=>{
             if (htmlFiles.length === 0)
@@ -489,14 +523,32 @@ class Compiler
 
     getHtmlFiles()
     {
-        return new Promise((resolve, reject)=>{
-            glob('src/**/index.html', (error, files)=>{
+        return new Promise((resolve, reject) => {
+            glob('src/**/*.html', (error, files) => {
                 if (error)
                 {
                     reject(error);
                 }
+                
+                const indexFiles = [];
+                const otherFiles = [];
 
-                resolve(files);
+                for (let i = 0; i < files.length; i++)
+                {
+                    if (files[i].match(/(index\.html)$/gi))
+                    {
+                        indexFiles.push(files[i]);
+                    }
+                    else
+                    {
+                        if (!files[i].match(/(shell\.html)|(homepage\.html)/gi))
+                        {
+                            otherFiles.push(files[i]);
+                        }
+                    }
+                }
+
+                resolve({ index: indexFiles, other: otherFiles })
             });
         });
     }
@@ -547,12 +599,12 @@ class Compiler
         });
     }
 
-    removeAssetsDirectory()
+    removeBuildDirectory()
     {
         return new Promise((resolve, reject)=>{
-            fs.promises.access('build/assets')
+            fs.promises.access('build')
             .then(() => {
-                fs.rmdir('build/assets', { recursive: true }, (error)=>{
+                fs.rmdir('build', { recursive: true }, (error)=>{
                     if (error)
                     {
                         reject(error);
