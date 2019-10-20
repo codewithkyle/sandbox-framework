@@ -32,6 +32,7 @@ class Compiler
             await this.updateHomepageHtml(homepageHtmlFile, timestamp);
             await this.injectIndexHtmlFiles(htmlFiles.index, timestamp);
             await this.injectHtmlIncludes();
+            await this.clonePublicHtmlFiles(htmlFiles.other);
 
             /** SASS */
             const sassFiles = await this.getSassFiles();
@@ -356,6 +357,40 @@ class Compiler
         });
     }
 
+    clonePublicHtmlFiles(htmlFiles)
+    {
+        return new Promise((resolve, reject) => {
+            if (htmlFiles.length === 0)
+            {
+                resolve();
+            }
+
+            let moved = 0;
+            for (let i = 0; i < htmlFiles.length; i++)
+            {
+                const htmlPath = htmlFiles[i].replace('src/', 'build/').match(/.*\//g)[0].replace(/[\/]$/g, '').trim();
+                const fileName = htmlFiles[i].replace(/.*\//gi, '');
+
+                fs.promises.mkdir(htmlPath, { recursive: true })
+                .then(()=>{
+                    fs.copyFile(htmlFiles[i], `${ htmlPath }/${ fileName }`, (error)=>{
+                        if (error)
+                        {
+                            reject(error);
+                        }
+
+                        moved++;
+                        if (moved === htmlFiles.length)
+                        {
+                            resolve();
+                        }
+                    });
+                })
+                .catch(error => reject(error));
+            }
+        });
+    }
+
     injectHtmlIncludes()
     {
         return new Promise((resolve, reject) => {
@@ -584,7 +619,7 @@ class Compiler
                     }
                     else
                     {
-                        if (!files[i].match(/(shell\.html)|(homepage\.html)/gi))
+                        if (!files[i].match(/(shell\.html)|(homepage\.html)|(\_.*\.html)/gi))
                         {
                             otherFiles.push(files[i]);
                         }
