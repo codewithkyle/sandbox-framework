@@ -25,11 +25,13 @@ class Compiler
             await this.moveWorker();
             const timestamp = Date.now();
             await this.createCachebustDirectory(timestamp);
+
+            /** HTML Files */
             const htmlFiles = await this.getHtmlFiles();
             const homepageHtmlFile = await this.getHomepageHtmlFile();
             await this.updateHomepageHtml(homepageHtmlFile, timestamp);
-            await this.injectIndexHtmlFiles(htmlFiles.index, timestamp)
-            await this.buildHtmlFiles(htmlFiles.other);
+            await this.injectIndexHtmlFiles(htmlFiles.index, timestamp);
+            await this.injectHtmlIncludes();
 
             /** SASS */
             const sassFiles = await this.getSassFiles();
@@ -354,36 +356,77 @@ class Compiler
         });
     }
 
-    buildHtmlFiles(htmlFiles)
+    injectHtmlIncludes()
     {
         return new Promise((resolve, reject) => {
-            if (htmlFiles.length === 0)
-            {
-                resolve();
-            }
+            glob('build/**/index.html', (error, files) => {
+                if (error)
+                {
+                    reject(error);
+                }
 
-            let moved = 0;
-            for (let i = 0; i < htmlFiles.length; i++)
-            {
-                const htmlPath = htmlFiles[i].replace('src/', 'build/').match(/.*\//g)[0].replace(/[\/]$/g, '').trim();
-                const fileName = htmlFiles[i].replace(/.*\//gi, '').trim();
-                fs.promises.mkdir(htmlPath, { recursive: true })
-                .then(()=>{
-                    fs.copyFile(htmlFiles[i], `${ htmlPath }/${ fileName }`, (error)=>{
+                if (files.length === 0)
+                {
+                    resolve();
+                }
+
+                let completed = 0;
+                for (let i = 0; i < files.length; i++)
+                {
+                    const file = files[i];
+                    fs.readFile(file, (error, buffer) => {
                         if (error)
                         {
                             reject(error);
                         }
 
-                        moved++;
-                        if (moved === htmlFiles.length)
+                        let data = buffer.toString();
+                        const includes = data.match(/\<include.*\>/gi);
+                        let replaced = 0;
+
+                        if (includes === null)
                         {
-                            resolve();
+                            completed++;
+                            if (completed === files.length)
+                            {
+                                resolve();
+                            }
+                        }
+                        else
+                        {
+                            for (let k = 0; k < includes.length; k++)
+                            {
+                                const src = includes[k].match(/(?<=src\=\").*(?=\")/gi)[0].replace(/^[\/]/gi, '').trim();
+                                fs.readFile(`src/${ src }`, (error, srcBuffer) => {
+                                    if (error)
+                                    {
+                                        reject(error);
+                                    }
+
+                                    const srcData = srcBuffer.toString();
+                                    data = data.replace(includes[k], srcData);
+                                    replaced++;
+                                    if (replaced === includes.length)
+                                    {
+                                        fs.writeFile(file, data, (error) => {
+                                            if (error)
+                                            {
+                                                reject(error);
+                                            }
+
+                                            completed++;
+                                            if (completed === files.length)
+                                            {
+                                                resolve();
+                                            }
+                                        });
+                                    }
+                                });
+                            }
                         }
                     });
-                })
-                .catch(error => reject(error));
-            }
+                }
+            });
         });
     }
 
