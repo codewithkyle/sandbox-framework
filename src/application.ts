@@ -10,7 +10,10 @@ class Application
     constructor()
     {
         this.load();
+        document.addEventListener('app:reload', this.handleReloadEvent);
     }
+
+    private handleReloadEvent:EventListener = this.load.bind(this);
 
     private async fetchFile(element:Element, filename:string, filetype:string)
     {
@@ -120,6 +123,7 @@ class Application
     {
         try
         {
+            document.documentElement.classList.add('is-loading');
             await this.fetchResources(window.criticalCss, 'link', 'css');
             this.fetchResources(window.stylesheets, 'link', 'css');
             await this.fetchResources(window.packages, 'script', 'js');

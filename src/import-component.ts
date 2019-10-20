@@ -23,6 +23,8 @@ class ImportComponent extends HTMLElement
             {
                 const response = await request.text();
                 this.parentElement.innerHTML += response;
+                const reloadEvent = new CustomEvent('app:reload');
+                document.dispatchEvent(reloadEvent);
             }
             else
             {
