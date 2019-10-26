@@ -1,138 +1,109 @@
-declare var stylesheets : Array<string>;
-declare var criticalCss : Array<string>;
-declare var modules : Array<string>;
-declare var components : Array<string>;
-declare var criticalComponents : Array<string>;
-declare var packages : Array<string>;
+type DomState = {
+    status: 'loading'|'reloading'|'idling'
+};
+
+interface WorkerResponse
+{
+    type: string,
+    urls: Array<string>,
+}
 
 class Application
 {
+    private worker : Worker;
+    private cachebust : string;
+    
     constructor()
     {
+        this.cachebust = document.documentElement.dataset.cachebust;
+        this.worker = new Worker(`./assets/${ this.cachebust }/resource-worker.js`);
+        this.worker.onmessage = this.handleIncomingWorkerMessage.bind(this);
         this.load();
         document.addEventListener('app:reload', this.handleReloadEvent);
     }
 
     private handleReloadEvent:EventListener = this.load.bind(this);
 
-    private async fetchFile(element:Element, filename:string, filetype:string)
+    private appendStylesheets(urls:Array<string>)
     {
-        try
+        for (let i = 0; i < urls.length; i++)
         {
-            const request = await fetch(`${ window.location.origin }/assets/${ document.documentElement.dataset.cachebust }/${ filename }.${ filetype }`);
-            if (request.ok)
+            const el:HTMLLinkElement = document.head.querySelector(`link[href="${ urls[i] }"]`) || document.createElement('link');
+            if (!el.isConnected)
             {
-                const response = await request.blob();
-                const fileUrl = URL.createObjectURL(response);
-                switch (filetype)
-                {
-                    case 'css':
-                        element.setAttribute('rel', 'stylesheet');
-                        element.setAttribute('href', fileUrl);
-                        break;
-                    case 'js':
-                        element.setAttribute('type', 'text/javascript');
-                        element.setAttribute('src', fileUrl);
-                        break;
-                }
-                return;
+                el.href = urls[i];
+                el.rel = 'stylesheet';
+                document.head.append(el);
             }
-            
-            throw `Failed to fetch ${ filename }.${ filetype } server responded with ${ request.status }`;
-
-        }
-        catch (error)
-        {
-            throw error;
         }
     }
 
-    private fetchResources(fileListArray:Array<string>, element:string, filetype:string) : Promise<any>
+    private appendScripts(urls:Array<string>)
     {
-        return new Promise((resolve) => {
-            if (fileListArray.length === 0)
+        for (let i = 0; i < urls.length; i++)
+        {
+            const el:HTMLScriptElement = document.head.querySelector(`script[src="${ urls[i] }"]`) || document.createElement('script');
+            if (!el.isConnected)
             {
-                resolve();
+                el.src = urls[i];
+                el.type = 'module';
+                document.head.append(el);
             }
-
-            let count = 0;
-            const required = fileListArray.length;
-
-            while (fileListArray.length > 0)
-            {
-                const filename = fileListArray[0].replace(/(\.js)$|(\.css)$/gi, '');
-                let el = document.head.querySelector(`${ element }[file="${ filename }.${ filetype }"]`);
-                if (!el)
-                {
-                    el = document.createElement(element);
-                    el.setAttribute('file', `${ filename }.${ filetype }`);
-                    document.head.appendChild(el);
-                    this.fetchFile(el, filename, filetype)
-                    .then(() => {
-                        el.addEventListener('load', () => {
-                            count++;
-                            if (count === required)
-                            {
-                                resolve();
-                            }
-                        });
-                    })
-                    .catch(error => {
-                        console.error(error);
-                        count++;
-                        if (count === required)
-                        {
-                            resolve();
-                        }
-                    });
-                }
-                else
-                {
-                    count++;
-                    if (count === required)
-                    {
-                        resolve();
-                    }
-                }
-
-                fileListArray.splice(0, 1);
-            }
-        });
+        }
     }
 
-    private packagesLoaded() : void
+    private handleIncomingWorkerMessage(e:MessageEvent)
     {
-        const event = new CustomEvent('app:packagesloaded');
-        document.dispatchEvent(event);
+        const response:WorkerResponse = e.data;
+        switch (response.type)
+        {
+            case 'criticalCss':
+                this.appendStylesheets(response.urls);
+                break;
+            case 'webComponents':
+                this.appendScripts(response.urls);
+                break;
+        }
     }
 
-    private modulesLoaded() : void
-    {
-        const event = new CustomEvent('app:modulesloaded');
-        document.dispatchEvent(event);
-    }
-
-    private finishLoading() : void
-    {
-        document.documentElement.classList.remove('is-loading');
-        const event = new CustomEvent('app:loaded');
-        document.dispatchEvent(event);
-    }
-
-    private async load()
+    private async load(e:Event = null)
     {
         try
         {
-            document.documentElement.classList.add('is-loading');
-            await this.fetchResources(window.criticalCss, 'link', 'css');
-            this.fetchResources(window.stylesheets, 'link', 'css');
-            await this.fetchResources(window.packages, 'script', 'js');
-            this.packagesLoaded();
-            await this.fetchResources(window.modules, 'script', 'js');
-            this.modulesLoaded();
-            await this.fetchResources(window.criticalComponents, 'script', 'js');
-            this.fetchResources(window.components, 'script', 'js');
-            this.finishLoading();
+            if (e !== null)
+            {
+                document.documentElement.setAttribute('state', 'reloading');
+            }
+            else
+            {
+                document.documentElement.setAttribute('state', 'loading');
+            }
+
+            /** Get web component scripts */
+            // const customElements = Array.from(document.body.querySelectorAll('[web-component]:not([state])'));
+            // const requestedWebComponents:{ [key:string]:string } = {};
+            // for (let i = 0; i < customElements.length; i++)
+            // {
+            //     const customElement = customElements[i].tagName.toLowerCase().trim();
+            //     requestedWebComponents[customElement] = customElement;
+            // }
+            // this.worker.postMessage({
+            //     type: 'scripts',
+            //     files: requestedWebComponents
+            // });
+
+            const criticalCssElements = Array.from(document.documentElement.querySelectorAll('[critical-css]'));
+            let criticalCssFileStrings:Array<string> = [];
+            for (let i = 0; i < criticalCssElements.length; i++)
+            {
+                const files = criticalCssElements[i].getAttribute('critical-css').trim().toLowerCase().split(/(\s+)/g);
+                criticalCssFileStrings = [...files];
+            }
+            this.worker.postMessage({
+                type: 'criticalCss',
+                criticalCss: criticalCssFileStrings,
+                cachebust: this.cachebust,
+            });
         }
         catch (error)
         {

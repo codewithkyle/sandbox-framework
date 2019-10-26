@@ -108,7 +108,7 @@
         }
     </style>
 </head>
-<body>
+<body critical-css="colors reset settings">
     <loading-screen>
         <div>
             <circle-loader></circle-loader>
@@ -124,7 +124,7 @@
         </page-view>
     </main>
     <script type="module" src="/assets/application.js"></script>
-    <script type="module">
+    <!-- <script type="module">
         if ('serviceWorker' in navigator && !window.location.origin.match(/\.local/gi) && !window.location.hostname.match('localhost') && !window.location.hostname.match('127.0.0.1'))
         {
             navigator.serviceWorker.register("worker.js", { scope: '/' })
@@ -137,6 +137,6 @@
                 console.error('Registration failed with ' + error);
             });
         }
-    </script>
+    </script> -->
 </body>
 </html>
