@@ -97,7 +97,7 @@ class Application
             for (let i = 0; i < criticalCssElements.length; i++)
             {
                 const files = criticalCssElements[i].getAttribute('critical-css').trim().toLowerCase().split(/(\s+)/g);
-                criticalCssFileStrings = [...files];
+                criticalCssFileStrings = [...criticalCssFileStrings, ...files];
             }
             this.worker.postMessage({
                 type: 'criticalCss',
