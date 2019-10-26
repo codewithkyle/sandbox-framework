@@ -4,7 +4,7 @@ interface IncomingMessage
     files: {
         [key:string]: string
     },
-    criticalCss: Array<string>,
+    fileStrings: Array<string>,
     cachebust: string,
 }
 
@@ -13,14 +13,13 @@ onmessage = (event) => {
     switch (message.type)
     {
         case 'scripts':
-            console.log(message.files);
-            scripts(message.files, message.cachebust)
+            scripts(message.files, message.cachebust);
             break;
         case 'stylesheets':
-            console.log(message.files);
+            stylesheets(message.fileStrings, message.cachebust, 'stylesheets');
             break;
         case 'criticalCss':
-            criticalCss(message.criticalCss, message.cachebust);
+            stylesheets(message.fileStrings, message.cachebust, 'criticalCss');
             break;
     }
 }
@@ -66,27 +65,27 @@ function scripts(scriptFileStrings:{ [key:string]:string }, cachebust:string) : 
  * Creates an object that contains all the required CSS file names.
  * @param elements - Array of HTML elements that contain a `critical-css` attribute
  */
-function criticalCss(criticalCssFileStrings:Array<string>, cachebust:string) : void
+function stylesheets(cssFileStrings:Array<string>, cachebust:string, responseType:string) : void
 {
-    const requestedCriticalCss:{ [key:string]:string } = {};
-    for (let i = 0; i < criticalCssFileStrings.length; i++)
+    const requestedCss:{ [key:string]:string } = {};
+    for (let i = 0; i < cssFileStrings.length; i++)
     {
-        const file = criticalCssFileStrings[i].replace(/(\s)|(\.css)$/g, '');
+        const file = cssFileStrings[i].replace(/(\s)|(\.css)$/g, '');
         if (file !== '')
         {
-            requestedCriticalCss[file] = file;
+            requestedCss[file] = file;
         }
     }
 
     new Promise((resolve) => {
-        const requestedFiles = Object.keys(requestedCriticalCss).length;
+        const requestedFiles = Object.keys(requestedCss).length;
         let received = 0;
         const urls:Array<string> = [];
         if (requestedFiles === 0)
         {
             resolve(urls);
         }
-        Object.keys(requestedCriticalCss).forEach((filename:string) => {
+        Object.keys(requestedCss).forEach((filename:string) => {
             fetchFile(filename, 'css', cachebust)
             .then((blobUrl:string) => {
                 urls.push(blobUrl);
@@ -106,7 +105,7 @@ function criticalCss(criticalCssFileStrings:Array<string>, cachebust:string) : v
         // @ts-ignore
         postMessage(
             {
-                type: 'criticalCss',
+                type: responseType,
                 urls: urls,
             }
         );

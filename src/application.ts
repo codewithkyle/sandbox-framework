@@ -89,6 +89,7 @@ class Application
             case 'criticalCss':
                 this.appendStylesheets(response.urls);
                 document.documentElement.setAttribute('state', 'idling');
+                this.getStylesheets();
                 this.getWebComponents();
                 break;
             case 'scripts':
@@ -112,7 +113,7 @@ class Application
         }
         this.worker.postMessage({
             type: 'criticalCss',
-            criticalCss: criticalCssFileStrings,
+            fileStrings: criticalCssFileStrings,
             cachebust: this.cachebust,
         });
     }
@@ -126,6 +127,23 @@ class Application
             customElements[i].setAttribute('state', 'waiting');
             this.io.observe(customElements[i]);
         }
+    }
+
+    private getStylesheets() : void
+    {
+        const stylesheetElements = Array.from(document.documentElement.querySelectorAll('[stylesheets]'));
+        let cssFileStrings:Array<string> = [];
+        for (let i = 0; i < stylesheetElements.length; i++)
+        {
+            const files = stylesheetElements[i].getAttribute('stylesheets').trim().toLowerCase().split(/(\s+)/g);
+            cssFileStrings = [...cssFileStrings, ...files];
+            stylesheetElements[i].removeAttribute('stylesheets');
+        }
+        this.worker.postMessage({
+            type: 'stylesheets',
+            fileStrings: cssFileStrings,
+            cachebust: this.cachebust,
+        });
     }
 
     private load(e:Event = null)
