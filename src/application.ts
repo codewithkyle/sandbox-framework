@@ -17,7 +17,7 @@ class Application
     constructor()
     {
         this.cachebust = document.documentElement.dataset.cachebust;
-        this.worker = new Worker(`./assets/${ this.cachebust }/resource-worker.js`);
+        this.worker = new Worker(`${ window.location.origin }/assets/${ this.cachebust }/resource-worker.js`);
         this.worker.onmessage = this.handleIncomingWorkerMessage.bind(this);
         this.io = new IntersectionObserver(this.intersectionCallback);
         this.load();
@@ -30,26 +30,23 @@ class Application
     private handleIntersection(entries:Array<IntersectionObserverEntry>)
     {
         const requestedWebComponents:{ [key:string]:string } = {};
-        let hasIntersectingElements = false;
         for (let i = 0; i < entries.length; i++)
         {
             if (entries[i].isIntersecting)
             {
-                hasIntersectingElements = true;
                 this.io.unobserve(entries[i].target);
                 entries[i].target.setAttribute('state', 'loading');
                 const customElement = entries[i].target.tagName.toLowerCase().trim();
                 requestedWebComponents[customElement] = customElement;
+                const url = `${ window.location.origin }/assets/${ this.cachebust }/${ customElement }.js`;
+                const el:HTMLScriptElement = document.head.querySelector(`script[src="${ url }"]`) || document.createElement('script');
+                if (!el.isConnected)
+                {
+                    el.src = url;
+                    el.type = 'module';
+                    document.head.append(el);
+                }
             }
-        }
-
-        if (hasIntersectingElements)
-        {
-            this.worker.postMessage({
-                type: 'scripts',
-                files: requestedWebComponents,
-                cachebust: this.cachebust
-            });
         }
     }
 

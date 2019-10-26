@@ -268,11 +268,28 @@ class Compiler
                         reject(error);
                     }
 
-                    moved++;
-                    if (moved === files.length)
-                    {
-                        resolve();
-                    }
+                    fs.readFile(`build/assets/${ timestamp }/${ filename }`, (error, buffer) => {
+                        if (error)
+                        {
+                            reject(error);
+                        }
+
+                        let data = buffer.toString();
+                        data = data.replace(/(from\s\'.*\/)/g, `from './`);
+
+                        fs.writeFile(`build/assets/${ timestamp }/${ filename }`, data, (error) => {
+                            if (error)
+                            {
+                                reject(error);
+                            }
+
+                            moved++;
+                            if (moved === files.length)
+                            {
+                                resolve();
+                            }
+                        });
+                    });
                 });
             }
         });
