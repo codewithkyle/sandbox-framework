@@ -14,6 +14,7 @@ onmessage = (event) => {
     {
         case 'scripts':
             console.log(message.files);
+            scripts(message.files, message.cachebust)
             break;
         case 'stylesheets':
             console.log(message.files);
@@ -22,6 +23,43 @@ onmessage = (event) => {
             criticalCss(message.criticalCss, message.cachebust);
             break;
     }
+}
+
+function scripts(scriptFileStrings:{ [key:string]:string }, cachebust:string) : void
+{
+    new Promise((resolve) => {
+        const requestedFiles = Object.keys(scriptFileStrings).length;
+        let received = 0;
+        const urls:Array<string> = [];
+        if (requestedFiles === 0)
+        {
+            resolve(urls);
+        }
+        Object.keys(scriptFileStrings).forEach((filename:string) => {
+            fetchFile(filename, 'js', cachebust)
+            .then((blobUrl:string) => {
+                urls.push(blobUrl);
+            })
+            .catch((error:string) => {
+                console.error(error);
+            })
+            .then(() => {
+                received++;
+                if (received === requestedFiles)
+                {
+                    resolve(urls);
+                }
+            });
+        });
+    }).then((urls:Array<string>) => {
+        // @ts-ignore
+        postMessage(
+            {
+                type: 'scripts',
+                urls: urls,
+            }
+        );
+    });
 }
 
 /**
@@ -40,29 +78,16 @@ function criticalCss(criticalCssFileStrings:Array<string>, cachebust:string) : v
         }
     }
 
-    this.fetchFiles(requestedCriticalCss, 'css', cachebust).then((urls:Array<string>) => {
-        // @ts-ignore
-        postMessage(
-            {
-                type: 'criticalCss',
-                urls: urls,
-            }
-        );
-    });
-}
-
-function fetchFiles(files:{ [key:string]:string }, extension:string, cachebust:string) : Promise<any>
-{
-    return new Promise((resolve) => {
-        const requestedFiles = Object.keys(files).length;
+    new Promise((resolve) => {
+        const requestedFiles = Object.keys(requestedCriticalCss).length;
         let received = 0;
         const urls:Array<string> = [];
         if (requestedFiles === 0)
         {
             resolve(urls);
         }
-        Object.keys(files).forEach((filename:string) => {
-            fetchFile(filename, extension, cachebust)
+        Object.keys(requestedCriticalCss).forEach((filename:string) => {
+            fetchFile(filename, 'css', cachebust)
             .then((blobUrl:string) => {
                 urls.push(blobUrl);
             })
@@ -77,6 +102,14 @@ function fetchFiles(files:{ [key:string]:string }, extension:string, cachebust:s
                 }
             });
         });
+    }).then((urls:Array<string>) => {
+        // @ts-ignore
+        postMessage(
+            {
+                type: 'criticalCss',
+                urls: urls,
+            }
+        );
     });
 }
 

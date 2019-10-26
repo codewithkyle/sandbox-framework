@@ -4,7 +4,7 @@ type DomState = {
 
 interface WorkerResponse
 {
-    type: string,
+    type: 'scripts'|'criticalCss'|'stylesheets',
     urls: Array<string>,
 }
 
@@ -12,17 +12,46 @@ class Application
 {
     private worker : Worker;
     private cachebust : string;
+    private io : IntersectionObserver;
     
     constructor()
     {
         this.cachebust = document.documentElement.dataset.cachebust;
         this.worker = new Worker(`./assets/${ this.cachebust }/resource-worker.js`);
         this.worker.onmessage = this.handleIncomingWorkerMessage.bind(this);
+        this.io = new IntersectionObserver(this.intersectionCallback);
         this.load();
         document.addEventListener('app:reload', this.handleReloadEvent);
     }
 
     private handleReloadEvent:EventListener = this.load.bind(this);
+    private intersectionCallback:IntersectionObserverCallback = this.handleIntersection.bind(this);
+
+    private handleIntersection(entries:Array<IntersectionObserverEntry>)
+    {
+        const requestedWebComponents:{ [key:string]:string } = {};
+        let hasIntersectingElements = false;
+        for (let i = 0; i < entries.length; i++)
+        {
+            if (entries[i].isIntersecting)
+            {
+                hasIntersectingElements = true;
+                this.io.unobserve(entries[i].target);
+                entries[i].target.setAttribute('state', 'loading');
+                const customElement = entries[i].target.tagName.toLowerCase().trim();
+                requestedWebComponents[customElement] = customElement;
+            }
+        }
+
+        if (hasIntersectingElements)
+        {
+            this.worker.postMessage({
+                type: 'scripts',
+                files: requestedWebComponents,
+                cachebust: this.cachebust
+            });
+        }
+    }
 
     private appendStylesheets(urls:Array<string>)
     {
@@ -59,14 +88,47 @@ class Application
         {
             case 'criticalCss':
                 this.appendStylesheets(response.urls);
+                document.documentElement.setAttribute('state', 'idling');
+                this.getWebComponents();
                 break;
-            case 'webComponents':
+            case 'scripts':
                 this.appendScripts(response.urls);
+                break;
+            case 'stylesheets':
+                this.appendStylesheets(response.urls);
                 break;
         }
     }
 
-    private async load(e:Event = null)
+    private getCriticalCss() : void
+    {
+        const criticalCssElements = Array.from(document.documentElement.querySelectorAll('[critical-css]'));
+        let criticalCssFileStrings:Array<string> = [];
+        for (let i = 0; i < criticalCssElements.length; i++)
+        {
+            const files = criticalCssElements[i].getAttribute('critical-css').trim().toLowerCase().split(/(\s+)/g);
+            criticalCssFileStrings = [...criticalCssFileStrings, ...files];
+            criticalCssElements[i].removeAttribute('critical-css');
+        }
+        this.worker.postMessage({
+            type: 'criticalCss',
+            criticalCss: criticalCssFileStrings,
+            cachebust: this.cachebust,
+        });
+    }
+
+    private getWebComponents() : void
+    {
+        /** Get web component scripts */
+        const customElements = Array.from(document.body.querySelectorAll('[web-component]:not([state])'));
+        for (let i = 0; i < customElements.length; i++)
+        {
+            customElements[i].setAttribute('state', 'waiting');
+            this.io.observe(customElements[i]);
+        }
+    }
+
+    private load(e:Event = null)
     {
         try
         {
@@ -79,31 +141,7 @@ class Application
                 document.documentElement.setAttribute('state', 'loading');
             }
 
-            /** Get web component scripts */
-            // const customElements = Array.from(document.body.querySelectorAll('[web-component]:not([state])'));
-            // const requestedWebComponents:{ [key:string]:string } = {};
-            // for (let i = 0; i < customElements.length; i++)
-            // {
-            //     const customElement = customElements[i].tagName.toLowerCase().trim();
-            //     requestedWebComponents[customElement] = customElement;
-            // }
-            // this.worker.postMessage({
-            //     type: 'scripts',
-            //     files: requestedWebComponents
-            // });
-
-            const criticalCssElements = Array.from(document.documentElement.querySelectorAll('[critical-css]'));
-            let criticalCssFileStrings:Array<string> = [];
-            for (let i = 0; i < criticalCssElements.length; i++)
-            {
-                const files = criticalCssElements[i].getAttribute('critical-css').trim().toLowerCase().split(/(\s+)/g);
-                criticalCssFileStrings = [...criticalCssFileStrings, ...files];
-            }
-            this.worker.postMessage({
-                type: 'criticalCss',
-                criticalCss: criticalCssFileStrings,
-                cachebust: this.cachebust,
-            });
+            this.getCriticalCss();
         }
         catch (error)
         {
