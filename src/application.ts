@@ -35,33 +35,37 @@ class Application
             if (entries[i].isIntersecting)
             {
                 this.io.unobserve(entries[i].target);
-                entries[i].target.setAttribute('state', 'loading');
+                entries[i].target.setAttribute('state', 'seen');
                 const customElement = entries[i].target.tagName.toLowerCase().trim();
                 requestedWebComponents[customElement] = customElement;
                 const url = `${ window.location.origin }/assets/${ this.cachebust }/${ customElement }.js`;
-                const el:HTMLScriptElement = document.head.querySelector(`script[src="${ url }"]`) || document.createElement('script');
-                if (!el.isConnected)
-                {
-                    el.src = url;
-                    el.type = 'module';
-                    document.head.append(el);
-                }
+                import(url);
             }
         }
     }
 
     private appendStylesheets(urls:Array<string>)
     {
-        for (let i = 0; i < urls.length; i++)
-        {
-            const el:HTMLLinkElement = document.head.querySelector(`link[href="${ urls[i] }"]`) || document.createElement('link');
-            if (!el.isConnected)
+        return new Promise((resolve) => {
+            let loaded = 0;
+            for (let i = 0; i < urls.length; i++)
             {
-                el.href = urls[i];
-                el.rel = 'stylesheet';
-                document.head.append(el);
+                const el:HTMLLinkElement = document.head.querySelector(`link[href="${ urls[i] }"]`) || document.createElement('link');
+                if (!el.isConnected)
+                {
+                    el.addEventListener('load', () => {
+                        loaded++;
+                        if (loaded === urls.length)
+                        {
+                            resolve();
+                        }
+                    });
+                    el.href = urls[i];
+                    el.rel = 'stylesheet';
+                    document.head.append(el);
+                }
             }
-        }
+        });
     }
 
     private appendScripts(urls:Array<string>)
@@ -84,10 +88,11 @@ class Application
         switch (response.type)
         {
             case 'criticalCss':
-                this.appendStylesheets(response.urls);
-                document.documentElement.setAttribute('state', 'idling');
-                this.getStylesheets();
-                this.getWebComponents();
+                this.appendStylesheets(response.urls).then(() => {
+                    document.documentElement.setAttribute('state', 'idling');
+                    this.getStylesheets();
+                    this.getWebComponents();
+                });
                 break;
             case 'scripts':
                 this.appendScripts(response.urls);
@@ -121,7 +126,7 @@ class Application
         const customElements = Array.from(document.body.querySelectorAll('[web-component]:not([state])'));
         for (let i = 0; i < customElements.length; i++)
         {
-            customElements[i].setAttribute('state', 'waiting');
+            customElements[i].setAttribute('state', 'unseen');
             this.io.observe(customElements[i]);
         }
     }
